@@ -1,0 +1,31 @@
+一、
+static __shared__ float warpLevelSums[WARP_SIZE];
+在 CUDA 内核中，__shared__ 变量用于声明线程块共享内存。加不加 static 的区别如下：
+
+static __shared__ float warpLevelSums[WARP_SIZE];
+static 让变量在每个线程块内核调用期间只初始化一次，生命周期贯穿整个内核调用（但仅限于该线程块）。
+在 CUDA 内核中，__shared__ 变量本身就是每个线程块私有的，且生命周期就是一次内核调用，所以加不加 static 实际没有区别。
+官方推荐不加 static，直接用 __shared__ float warpLevelSums[WARP_SIZE];，更清晰。
+总结：在 CUDA 内核里，static __shared__ 和 __shared__ 没有本质区别，推荐不加 static。
+
+二、
+Warp Conflict 是CUDA中一个重要的性能概念，主要涉及共享内存访问冲突。
+什么是Warp Conflict
+Warp Conflict（也叫Bank Conflict）是指同一个warp内的多个线程同时访问共享内存的同一个bank，导致访问串行化，性能下降。
+共享内存Bank结构
+1. Bank组织方式
+GPU共享内存被分成32个bank（对应warp的32个线程）
+每个bank宽度为4字节（32位）
+地址映射：bank_id = (address / 4) % 32
+  1. 无冲突访问（最佳情况）
+__shared__ float sdata[32];
+int tid = threadIdx.x;
+
+// 每个线程访问不同bank - 1个时钟周期
+float val = sdata[tid];  // 线程0→bank0, 线程1→bank1, ...
+2. 2-way Bank Conflict
+__shared__ float sdata[64];
+int tid = threadIdx.x;
+
+// 两个线程访问同一bank - 2个时钟周期
+float val = sdata[tid * 2];  // 线程0,16→bank0; 线程1,17→bank1
