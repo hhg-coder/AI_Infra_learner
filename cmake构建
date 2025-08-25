@@ -1,0 +1,24 @@
+
+对于 CMakeLists.txt文件，情况稍有不同，因为 ​​CMake 本身不是一个构建工具，而是一个构建系统生成器​​。
+
+简单来说，CMakeLists.txt是 CMake 的​​配置文件​​，它描述了项目的构建规则（例如哪些源文件需要编译、需要链接哪些库、设置编译选项等）。但你不能直接用它来构建，你需要先用 CMake ​​生成​​ 一个真正的构建系统（比如 Makefile），然后再用对应的构建工具（比如 make）来编译。
+
+处理 CMakeLists.txt的标准流程
+通常，我们采用​​“源外构建”​​的方式，即在源代码目录外创建一个单独的构建目录。这是推荐的最佳实践，可以保持源代码目录的清洁。
+mkdir build
+cd build
+cmake ..
+如果你想使用 Ninja（一个比 make更快的构建工具），可以加上参数 -G Ninja：cmake -G Ninja ..
+如果你之前用的是 cmake -G Ninja ..，那么就使用 ninja
+ninja
+
+为什么需要 CMake？
+你可能会问，既然最后还是要用 make，为什么还要用 CMake 呢？这是因为 CMake 的优势在于：
+•
+​​跨平台​​：一份 CMakeLists.txt可以在 Linux、macOS、Windows 上生成对应平台的构建系统（如 Unix Makefiles、Visual Studio 项目、Xcode 项目等）。
+•
+​​管理大型项目​​：对于非常复杂的项目，手写 Makefile会变得极其困难和繁琐，CMake 可以更高效地管理它们。
+•
+​​自动处理依赖关系​​：CMake 可以很方便地查找系统上的库和头文件，并自动配置编译和链接选项。
+
+请始终记得使用 build目录进行“源外构建”。​
