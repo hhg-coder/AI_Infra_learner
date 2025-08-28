@@ -12,6 +12,8 @@ cmake ..
 如果你之前用的是 cmake -G Ninja ..，那么就使用 ninja
 ninja
 
+开始构建： cmake --build . 或 make
+
 为什么需要 CMake？
 你可能会问，既然最后还是要用 make，为什么还要用 CMake 呢？这是因为 CMake 的优势在于：
 •
