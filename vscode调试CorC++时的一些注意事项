@@ -1,0 +1,55 @@
+新建.vscode文件夹
+创建tasks.json和launch.json文件：
+tasks.json:需要包含编译命令，示例：
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build test_gpt2",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test_gpt2"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "detail": "编译 test_gpt2及依赖"
+        }
+    ]
+}
+
+launch.json包含启动调试设置：
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug test_gpt2",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_gpt2",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "preLaunchTask": "build test_gpt2",
+            
+        }
+    ]
+}
+"externalConsole" 参数的作用
+"externalConsole": false（推荐用于调试）：
+
+程序在 VS Code 的内置调试控制台中运行
+调试器能够完全控制程序的执行
+断点、单步调试等功能正常工作
+输入输出通过 VS Code 的调试控制台处理
+"externalConsole": true：
+
+程序在系统的外部终端窗口中运行
+调试器与程序的连接可能不稳定
+可能导致断点不生效、无法正常调试
+主要用于需要独立终端环境的程序
+我在一次配置时将externalConsole设置为true，导致vscode内置断点没用了，调试不了，找了好久原因才找到这个罪魁祸首！
