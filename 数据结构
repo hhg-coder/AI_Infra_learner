@@ -1,1 +1,12 @@
-一、STL底层数据结构
+一、
+STL（标准模板库）中的常用容器底层数据结构如下：
+
+vector：底层是动态数组（连续内存），支持随机访问，插入删除末尾效率高。
+list：底层是双向链表，不支持随机访问，插入删除任意位置效率高。
+deque：底层是分段连续内存组成的双端队列，支持高效头尾插入删除和随机访问。
+stack/queue：分别基于deque或list等容器实现，属于适配器。
+map/set：底层是红黑树（一种自平衡二叉搜索树），有序存储，查找、插入、删除效率为O(log n)。
+unordered_map/unordered_set：底层是哈希表，查找、插入、删除平均效率为O(1)。
+https://zhuanlan.zhihu.com/p/542115773
+https://zhuanlan.zhihu.com/p/359878588
+
