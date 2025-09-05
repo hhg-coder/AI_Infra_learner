@@ -103,6 +103,56 @@ std::move:
 move实际上它并不能移动任何东西，它唯一的功能是将一个左值强制转换为一个右值引用。
 如果是一些基本类型比如int和char[10]定长数组等类型，使用move的话仍然会发生拷贝（因为没有对应的移动构造函数）。
 所以，move对于含资源（堆内存或句柄）的对象来说更有意义。
+
+std::forward:
+完美转发
+std::forward被称为完美转发，它的作用是保持原来的值属性不变。啥意思呢？通俗的讲就是，如果原来的值是左值，经std::forward处理后该值还是左值；如果原来的值是右值，经std::forward处理后它还是右值。
+例子：
+#include <iostream>
+
+template<typename T>
+void print(T & t){
+    std::cout << "左值" << std::endl;
+}
+
+template<typename T>
+void print(T && t){
+    std::cout << "右值" << std::endl;
+}
+
+template<typename T>
+void testForward(T && v){
+    print(v);
+    print(std::forward<T>(v));
+    print(std::move(v));
+}
+
+int main(int argc, char * argv[])
+{
+    testForward(1);
+
+    std::cout << "======================" << std::endl;
+
+    int x = 1;
+    testFoward(x);
+}
+执行结果：
+左值
+右值
+右值
+=========================
+左值
+左值
+右值
+
+从上面第一组的结果我们可以看到，传入的1虽然是右值，但经过函数传参之后它变成了左值（在内存中分配了空间）；而第二行由于使用了std::forward函数，所以不会改变它的右值属性，因此会调用参数为右值引用的print模板函数；第三行，因为std::move会将传入的参数强制转成右值，所以结果一定是右值。
+
+再来看看第二组结果。因为x变量是左值，所以第一行一定是左值；第二行使用forward处理，它依然会让其保持左值，所以第二也是左值；最后一行使用move函数，因此一定是右值。
+“完美转发”，也就是不改变原值的属性。
+
+C++为什么需要完美转发？
+
+
 六、
 this 指针是一个隐含于每一个非静态成员函数中的特殊指针。它指向调用该非静态成员函数的那个对象。
 当对一个对象调用成员函数时，编译程序先将对象的地址赋给 this 指针，然后调用成员函数，每次成员函数存取数据成员时，都隐式使用 this 指针。
