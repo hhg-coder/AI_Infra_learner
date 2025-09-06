@@ -53,3 +53,13 @@ launch.json包含启动调试设置：
 可能导致断点不生效、无法正常调试
 主要用于需要独立终端环境的程序
 我在一次配置时将externalConsole设置为true，导致vscode内置断点没用了，调试不了，找了好久原因才找到这个罪魁祸首！
+
+
+
+记录一个非常恶心的问题：我在办公室使用vscode时没有遇到的问题
+我使用CMakeLists.txt配置了我的cuda项目，在另一台电脑上没有问题，但是用我自己的电脑点击生成的时候报错：
+具体报错可以看这个链接，和我的现象一致
+https://github.com/NVlabs/instant-ngp/issues/923
+解决方式是：
+Adding -D CMAKE_CUDA_COMPILER=$(which nvcc) to cmake fixed this for me:
+cmake . -D TCNN_CUDA_ARCHITECTURES=86 -D CMAKE_CUDA_COMPILER=$(which nvcc) -B build
