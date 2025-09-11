@@ -13,6 +13,7 @@
 739. 每日温度
       递减栈
 
+二、技巧
 青蛙跳台阶拓展：一只青蛙一次可以跳上1级台阶，也可以跳上2级……它也可以跳上n级。求该青蛙跳上一个n级的台阶(n为正整数)总共有多少种跳法。
 f(n)=f(n-1)+f(n-2)+……+f(2)+f(1);
 f(n-1)=f(n-2)+……+f(2)+f(1);
@@ -29,3 +30,9 @@ f(n)=2*f(n-1)
 （1）交换律： A ^ B = B ^ A
 （2）结合律： ( A ^ B ) ^ C = A ^ ( B ^ C )
 （3）自反性： A ^ B ^ B = A （由结合律可推： A ^ B ^ B = A ^ ( B ^ B ) = A ^ 0 = A）
+
+
+31、下一个排列
+https://leetcode.cn/problems/next-permutation/solutions/80560/xia-yi-ge-pai-lie-suan-fa-xiang-jie-si-lu-tui-dao-/?envType=study-plan-v2&envId=top-100-liked
+思路：从数组最后找到最前第一个升序的点i，交换i+1,end中第一个大于nums[i]的点nums[j],这个点一定存在，除非数组是降序的，如果数组降序的，那么i=-1，
+然后两种情况都可以使用reverse(nums.begin()+i+1, nums.end());
