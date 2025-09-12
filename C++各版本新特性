@@ -30,7 +30,7 @@ unique_ptr 和 shared_ptr——依赖 RAII 的资源管理指针
 内存模型和 atomic 变量
 thread、mutex、condition_variable 等——为基本的系统层级的并发提供了类型安全、可移植的支持
 future、promise 和 packaged_task，等——稍稍更高级的并发
-    异步编程的核心组件，用于在线程之间安全、便捷地传递异步操作的结果
+    异步编程的核心组件，用于在线程之间安全、便捷地传递异步操作的结果，用法和代码见 本仓库“异步”文件夹
 tuple——匿名的简单复合类型
 类型特征（type trait）——类型的可测试属性，用于元编程
 正则表达式匹配
