@@ -36,3 +36,8 @@ f(n)=2*f(n-1)
 https://leetcode.cn/problems/next-permutation/solutions/80560/xia-yi-ge-pai-lie-suan-fa-xiang-jie-si-lu-tui-dao-/?envType=study-plan-v2&envId=top-100-liked
 思路：从数组最后找到最前第一个升序的点i，交换i+1,end中第一个大于nums[i]的点nums[j],这个点一定存在，除非数组是降序的，如果数组降序的，那么i=-1，
 然后两种情况都可以使用reverse(nums.begin()+i+1, nums.end());
+
+
+三、买卖股票的最佳时机：
+参考：
+https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/solutions/740596/5xing-dai-ma-gao-ding-suo-you-gu-piao-ma-j6zo/
