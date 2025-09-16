@@ -41,3 +41,15 @@ ordered 是容器集合被排序，可以使用指定的顺序去遍历集合。
 
 熟悉关联式容器，需要有 [RB-tree](https://github.com/steveLauwh/Data-Structures-And-Algorithms/tree/master/Tree/RB-tree)(红黑树原理) 和 [hash table](https://github.com/steveLauwh/Data-Structures-And-Algorithms/tree/master/Hash%20Table)(哈希表原理) 基础。
 
+
+一、vector方法：
+capacity() 返回当前已分配的存储空间能容纳的元素数。
+size()     返回当前元素的数量。
+reserve(n)  增加容量至至少 n。如果 n大于当前 capacity()，会重新分配存储空间。​​不会改变 size()​​。
+shrink_to_fit()(C++11)  请求移除未使用的容量，使 capacity()与 size()匹配。这是一个​​非强制性请求​​，实现可以忽略。
+assign(n, value)  用 n个 value的副本替换所有内容。
+
+
+emplace_backvs push_back​​：
+v.push_back(MyClass(1, 2, 3));// 先构造一个临时对象，再将其移动或拷贝到容器中。
+v.emplace_back(1, 2, 3);// 直接在容器末尾的内存中调用 MyClass(1, 2, 3)进行构造。​​更高效​​。
