@@ -5,6 +5,8 @@
 protected 继承是一种​​实现继承​​，它强调的是对基类实现细节的复用，而非接口的延续（public 继承才是接口继承）
 实现“并非是一个”的关系​​：当你希望重用基类的实现，但又不愿意在派生类中公开表达“派生类对象就是一个基类对象”的语义时（即不满足 Liskov 替换原则），可以使用 protected 继承。它​​隐藏了基类的公有接口​​，外部代码无法通过派生类的对象直接调用基类的任何方法
 谨慎使用​​：protected 继承和 private 继承一样，在实际编程中​​并不常用​​。在大多数情况下，​​组合（Composition）​​（即在一个类中包含另一个类的对象作为成员变量）是比 protected/private 继承更好的代码复用方式，因为它能降低耦合度。public 继承是最常用的方式，用于建立清晰的“is-a”关系。
+
+
 二、空指针、野指针、悬空指针
 空指针：一般我们将等于0/NULL/nullptr的指针称为空指针。空指针不能被解引用，但是可以对空指针取地址。
 int* p = nullptr;    //空指针
@@ -209,3 +211,29 @@ typedef ParseParameterAttrStatus (*Creator)(
 当对象调用成员函数时，编译器会隐式地传入一个指向当前对象的this指针。
 这样，虽然函数代码是共享的，但通过this指针可以区分不同的对象实例并访问其各自的成员变量。
 静态成员函数，它们也是共享的，但没有this指针，因此不能直接访问非静态成员变量
+
+
+十、new/delete
+new 实际上会调用 operator new，它默认调用 malloc（C 库函数）。
+delete 实际上会调用 operator delete，它默认调用 free（C 库函数）。
+void* operator new(size_t size) {
+    return malloc(size); // 实际调用C库的malloc
+}
+void operator delete(void* ptr) noexcept {
+    free(ptr); // 实际调用C库的free
+}
+
+new = 申请内存（operator new → malloc）+ 调用构造函数
+释放时，delete 会先调用析构函数，再释放内存（operator delete → free）
+
+delete p; 的底层原理如下（假设 p 是通过 new 分配的指针）：
+调用析构函数
+首先，delete p; 会调用指针 p 所指向对象的析构函数（p->~A()），用于清理对象资源。
+释放内存
+析构函数调用完成后，delete 会调用全局的 operator delete，将 p 指向的内存块释放。
+默认情况下，operator delete 会调用 C 标准库的 free 函数。
+伪代码：
+if (p != nullptr) {
+    p->~A();                  // 1. 调用析构函数
+    operator delete(p);       // 2. 释放内存（通常调用free）
+}
