@@ -173,3 +173,55 @@ void reverse();：反转链表中元素的顺序。
 结论：​​ 两者都只交换​​管理权​​（vector 交换数组管理权，list 交换链表头管理权），不移动实际数据或节点。
 
 
+四、queue方法
+std::queue 是 C++ STL 中的队列容器适配器Container Adapter，它本身不是一个独立的数据结构，而是对底层容器（如 deque 或 list）的封装，提供**先进先出（FIFO）**的队列接口。
+这意味着它基于现有的序列容器（如 std::deque或 std::list）提供特定的接口（先进先出 FIFO）。
+常用方法
+push(const T&) / push(T&&)
+向队尾插入元素（底层调用容器的 push_back）。
+pop()
+移除队首元素（底层调用容器的 pop_front）。
+front()
+返回队首元素的引用（底层调用容器的 front）。
+back()
+返回队尾元素的引用（底层调用容器的 back）。
+empty()
+判断队列是否为空。
+size()
+返回队列中元素个数。
+std::queue 通过适配底层容器（默认 deque），只暴露队列相关的接口，隐藏了底层容器的其他操作。
+只允许队首出、队尾进，保证 FIFO。
+不支持遍历和随机访问。
+
+五、priority_queue
+std::priority_queue也是一个​​容器适配器 (Container Adapter)​​。它的核心特性是元素不是按照插入顺序，而是按照​​优先级​​进行排序和访问的。
+核心操作：​​
+push(element): 将元素插入队列。
+pop(): 移除队列中​​优先级最高​​的元素（默认为最大元素）。
+top(): 访问队列中​​优先级最高​​的元素（默认为最大元素）（不移除）。
+​​底层数据结构：​​ 通常基于​​堆 (Heap)​​ 数据结构实现（默认是最大堆）（即 top()返回最大值）。堆是一种特殊的完全二叉树，满足堆性质（Heap Property）;
+容器适配器：​​ priority_queue封装了一个底层容器（默认是 std::vector），并使用堆算法（std::make_heap, std::push_heap, std::pop_heap）来维护这个容器的堆结构。它只暴露与优先级队列相关的接口。
+swap(priority_queue& other) noexcept(...): 交换两个 priority_queue的内容。交换它们的底层容器和比较器对象。时间复杂度通常是 O(1)，具体取决于底层容器和比较器的 swap实现（vector::swap是 O(1)）。
+
+六、stack
+std::stack 是 C++ STL 中的栈容器适配器，它本身不是独立的数据结构，而是对底层容器（如 deque 或 vector）的封装，提供**后进先出（LIFO）**的栈接口。
+底层原理
+容器适配器
+stack 默认底层用 std::deque 实现（也可以用 std::vector 或 std::list）。
+通过组合方式，将底层容器的部分接口暴露为栈操作。
+数据结构
+栈只允许在一端（栈顶）插入和删除元素，保证 LIFO 顺序。
+不允许遍历和随机访问，只能访问栈顶元素。
+成员变量
+内部有一个底层容器对象（如 std::deque<T>）。
+常用方法
+push(const T&) / push(T&&)
+向栈顶插入元素（底层调用容器的 push_back）。
+pop()
+移除栈顶元素（底层调用容器的 pop_back）。
+top()
+返回栈顶元素的引用（底层调用容器的 back）。
+empty()
+判断栈是否为空。
+size()
+返回栈中元素个数。
