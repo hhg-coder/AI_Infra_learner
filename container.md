@@ -290,10 +290,11 @@ set 是 map 的“只有 key 没有 value”的版本。
 可以把 multimap/multiset 看作是“允许重复 key 的 map/set”，用法和实现方式几乎一样，只是插入和查找时会处理重复 key 的情况。
 
 十、unordered_map、unordered_set、unordered_multimap、unordered_multiset方法
+无序关联容器
 底层原理
 1. 数据结构
 这四个容器都基于**哈希表（Hash Table）**实现。
-元素分布在一组“桶”（bucket）中，桶的数量动态调整。
+元素分布在一组“桶”（bucket）中，桶的数量动态调整。桶 (Bucket)：​​ 存储具有相同哈希值（模桶数）的元素的容器（链表或树）。
 通过哈希函数将 key 映射到某个桶，桶内通常用链表或链式结构存储元素（C++11/14/17 标准实现多为链表）。
 2. 有序性与唯一性
 无序：元素在内存中的排列顺序与插入顺序、key 大小无关，只与哈希值有关。
@@ -302,3 +303,30 @@ unordered_map/unordered_set：key 唯一。
 unordered_multimap/unordered_multiset：key 可重复。
 3. 效率
 查找、插入、删除的平均时间复杂度为 O(1)，最坏情况下 O(n)（哈希冲突严重时）。
+
+在接口设计上，multi版本没有operator[]，因为无法唯一确定返回值。
+常用获取键值对的方法：find(key)：返回第一个 key 匹配的迭代器。相同key的分布不保证连续
+equal_range(key)：
+返回所有 key 匹配的区间（pair<iterator, iterator>），可遍历所有同 key 的元素。
+auto range = mm.equal_range(key);
+for (auto it = range.first; it != range.second; ++it) {
+    std::cout << it->first << " : " << it->second << std::endl;
+}
+
+所有unordered容器都提供桶接口(bucket_count, load_factor等)用于性能调优。
+冲突解决 (Collision Resolution)：​​ 不同的键可能被哈希到同一个桶（即产生​​哈希冲突 (Hash Collision)​​）。
+标准库通常使用​​链地址法 (Separate Chaining)​​ 来解决冲突：每个桶实际上是一个链表（或小型平衡树，如红黑树，用于优化长链表性能），存储所有哈希到该桶的元素。
+
+自动扩容rehash（开销O(n)）：
+装载因子越大，哈希冲突概率越高，查找效率可能下降。
+当装载因子超过最大值（max_load_factor），哈希表会自动扩容并重新分布元素。
+可以通过 unordered_map 的 load_factor() 和 max_load_factor() 方法获取和设置。
+load_factor = 元素个数 / 桶（bucket）个数
+
+在方法接口上，unordered_ 系列多了哈希相关方法和参数，遍历顺序无序。
+swap(unordered_X& other): 交换两个容器的内容。通常是 O(1)（交换内部指针）。
+
+桶在内存的排列
+桶在内存中通常是一组连续的指针数组（比如 std::vector<Node*>），每个指针指向一个链表的头节点（链式法）。
+每个元素通过哈希函数计算 key 的哈希值，然后对桶数量取模，决定放入哪个桶。
+桶本身是连续分配的，但桶内的元素（链表节点）在内存中不一定连续。
