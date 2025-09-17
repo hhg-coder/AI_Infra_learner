@@ -225,3 +225,80 @@ empty()
 判断栈是否为空。
 size()
 返回栈中元素个数。
+
+
+七、map方法
+std::map 是一个有序的关联容器，包含具有唯一键的键值对。键通过比较函数 Compare 进行排序。搜索、删除和插入操作具有对数复杂度。Map 通常实现为红黑树。
+数据结构
+std::map 通常用**红黑树（Red-Black Tree）**实现，是一种自平衡二叉搜索树。
+每个节点存储一个键值对（std::pair<const Key, T>），并维护左右子树和父节点指针，以及颜色信息（红/黑）。
+有序性
+所有元素按键（key）自动排序，默认用 < 运算符（可自定义比较器）。
+查找、插入、删除的时间复杂度均为 O(log n)。
+唯一性
+每个 key 只能出现一次，插入相同 key 会失败。
+
+常用方法
+insert(const value_type&) 插入一个键值对。如果 key 已存在，插入失败。
+operator[] 通过 key 访问 value。如果 key 不存在，会自动插入一个默认值。
+find(const Key&) 查找 key，返回指向该元素的迭代器，找不到返回 end()。
+erase(const Key&) 删除指定 key 的元素。
+begin()/end() 返回有序遍历的迭代器。
+lower_bound(const Key&) 返回第一个不小于 key 的元素迭代器。
+upper_bound(const Key&) 返回第一个大于 key 的元素迭代器。
+size()/empty()/clear() 容量相关操作。
+extract() extract 方法返回的是一个节点句柄（node handle），类型为 std::map<Key, T>::node_type。这个类型可以安全地转移节点到其他 map，也可以访问和修改节点的 key/value。
+merge() merge 会把另一个 map 中所有不重复 key 的节点直接“搬到”当前 map。已存在的 key 不会被覆盖，剩下的节点还留在源 map。底层实现：直接移动节点指针，不做元素拷贝或移动构造，效率极高。
+
+swap原理：
+swap 方法只需交换这些成员变量（如根节点指针、大小、比较器等）
+伪代码：
+void swap(map& other) noexcept {
+    std::swap(this->root, other.root);         // 交换红黑树根节点指针
+    std::swap(this->size, other.size);         // 交换元素数量
+    std::swap(this->comp, other.comp);         // 交换比较器
+    std::swap(this->alloc, other.alloc);       // 交换分配器
+    // 其他必要的成员变量
+}
+
+八、set方法
+std::set 是一个关联容器，它包含一个已排序的唯一 Key 类型对象的集合。排序使用键比较函数 Compare 完成。搜索、删除和插入操作具有对数复杂度。Set 通常实现为 红黑树。
+底层原理
+数据结构
+std::set 通常用**红黑树（Red-Black Tree）**实现，是一种自平衡二叉搜索树。
+每个节点只存储一个元素（key），没有 value。
+元素在内存中自动有序排列（默认用 < 比较，可自定义比较器）。
+唯一性
+每个元素只能出现一次，插入重复元素会失败。
+有序性
+所有元素始终保持有序，支持高效的有序遍历。
+效率
+查找、插入、删除的时间复杂度均为 O(log n)。
+底层原理和方法基本和map差不多
+可以理解为：
+set 是 map 的“只有 key 没有 value”的版本。
+
+
+九、multimap和multiset
+底层数据结构：​​ 与 std::map和 std::set一样，在标准库实现中，multimap和 multiset也几乎总是基于​​红黑树 (Red-Black Tree)​​ 实现。
+是 std::map和 std::set的变体，核心区别在于​​允许存储重复的键​​。
+底层实现要点
+插入：允许重复 key，插入时会放在等价 key 的区间内（通常插在已有 key 的后面）。
+查找：find 返回第一个等于 key 的元素，equal_range 返回所有等于 key 的区间。
+遍历：有序遍历，重复 key 会连续出现。
+节点操作：extract/merge 直接操作树节点指针，避免元素拷贝
+可以把 multimap/multiset 看作是“允许重复 key 的 map/set”，用法和实现方式几乎一样，只是插入和查找时会处理重复 key 的情况。
+
+十、unordered_map、unordered_set、unordered_multimap、unordered_multiset方法
+底层原理
+1. 数据结构
+这四个容器都基于**哈希表（Hash Table）**实现。
+元素分布在一组“桶”（bucket）中，桶的数量动态调整。
+通过哈希函数将 key 映射到某个桶，桶内通常用链表或链式结构存储元素（C++11/14/17 标准实现多为链表）。
+2. 有序性与唯一性
+无序：元素在内存中的排列顺序与插入顺序、key 大小无关，只与哈希值有关。
+唯一性：
+unordered_map/unordered_set：key 唯一。
+unordered_multimap/unordered_multiset：key 可重复。
+3. 效率
+查找、插入、删除的平均时间复杂度为 O(1)，最坏情况下 O(n)（哈希冲突严重时）。
