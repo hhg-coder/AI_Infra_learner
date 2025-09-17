@@ -305,7 +305,7 @@ unordered_multimap/unordered_multiset：key 可重复。
 查找、插入、删除的平均时间复杂度为 O(1)，最坏情况下 O(n)（哈希冲突严重时）。
 
 在接口设计上，multi版本没有operator[]，因为无法唯一确定返回值。
-常用获取键值对的方法：find(key)：返回第一个 key 匹配的迭代器。相同key的分布不保证连续
+常用获取键值对的方法：find(key)：返回第一个 key 匹配的迭代器。相同key的分布不保证连续，但是保证在同一个桶中。
 equal_range(key)：
 返回所有 key 匹配的区间（pair<iterator, iterator>），可遍历所有同 key 的元素。
 auto range = mm.equal_range(key);
