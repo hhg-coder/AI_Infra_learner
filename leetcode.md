@@ -50,3 +50,6 @@ https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/solutions/740596
 四、数组
 41、缺失的第一个正数，要求常数空间，可以使用原地哈希，即利用输入数组做哈希
 
+矩阵：
+240、搜索二维矩阵2
+将起始点定在右上角或者左下角
