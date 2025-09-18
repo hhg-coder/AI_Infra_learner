@@ -45,3 +45,8 @@ https://leetcode.cn/problems/next-permutation/solutions/80560/xia-yi-ge-pai-lie-
 三、买卖股票的最佳时机：
 参考：
 https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/solutions/740596/5xing-dai-ma-gao-ding-suo-you-gu-piao-ma-j6zo/
+
+
+四、数组
+41、缺失的第一个正数，要求常数空间，可以使用原地哈希，即利用输入数组做哈希
+
