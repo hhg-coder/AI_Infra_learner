@@ -237,3 +237,33 @@ if (p != nullptr) {
     p->~A();                  // 1. 调用析构函数
     operator delete(p);       // 2. 释放内存（通常调用free）
 }
+
+
+十一、关于函数参数是指针的问题
+比如sort(Node* head);如果head本身在函数中被更改，那么函数外head会变吗？
+答案是不会：
+对于函数 sort(Node* head)，如果函数内部改变了 head指针本身，​​函数外的 head不会被改变​​。但如果改变了 head指向的节点内容，那么函数外会看到这些变化。
+1. 指针传递的本质
+当您传递 Node* head给函数时，实际上传递的是指针的​​副本​​（即内存地址的副本）。这意味着：
+函数内可以修改指针指向的内容（节点的值、next指针等）
+但函数内修改指针本身（让它指向别处）不会影响函数外的指针
+void modifyContent(Node* head) {
+    // 这会改变函数外看到的节点内容
+    head->val = 100;
+    head->next = someOtherNode;
+}
+
+void modifyPointer(Node* head) {
+    // 这不会影响函数外的指针
+    head = someOtherNode; // 只改变了函数内的副本
+}
+
+void modifyPointerWithReference(Node*& head) {
+    // 这会改变函数外的指针（使用引用）
+    head = someOtherNode;
+}
+
+void modifyPointerWithDoublePointer(Node** head) {
+    // 这会改变函数外的指针（使用指针的指针）
+    *head = someOtherNode;
+}
