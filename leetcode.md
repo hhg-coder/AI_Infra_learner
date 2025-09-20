@@ -53,3 +53,10 @@ https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/solutions/740596
 矩阵：
 240、搜索二维矩阵2
 将起始点定在右上角或者左下角
+
+五、链表
+1、快慢指针：
+fast = head->next;
+slow = head;
+这么做是标准做法
+如果fast= head, slow = head;这么做在链表节点数是偶数时，不是均分；
