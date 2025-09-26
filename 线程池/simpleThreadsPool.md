@@ -60,3 +60,9 @@ std::unique_lock<std::mutex> lock(queueMutex);
 
 用于条件变量等待时，必须用 std::unique_lock。
 只做简单加锁解锁时，用 std::lock_guard 更高效。
+
+
+如果有线程空闲下来（即执行完任务，准备再次从队列取任务），它会进入如下代码：
+cv.wait(lock, [this]() { return stopFlag || !tasks.empty(); });
+此时，如果任务队列还有剩余任务，那么条件 !tasks.empty() 为真，cv.wait 不会阻塞，线程会直接继续取任务执行，不需要 notify_one()。
+只有在任务队列为空时，线程才会阻塞等待新的任务到来，并等待 notify_one() 唤醒。
