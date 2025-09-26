@@ -46,3 +46,17 @@ std::unique_lock<std::mutex> lock(queueMutex);
 总结：
 只要每次访问 tasks 时都加同一个互斥锁（queueMutex），就能保证线程安全。
 这就是多线程环境下对共享队列的标准做法。
+
+
+1. std::lock_guard<std::mutex> lock(queueMutex);
+作用：自动加锁，作用域结束时自动解锁。
+特点：简单、轻量，不能手动unlock，也不能配合条件变量使用。
+适用场景：只需要简单加锁解锁的地方。
+2. std::unique_lock<std::mutex> lock(queueMutex);
+作用：自动加锁，作用域结束时自动解锁。
+特点：功能更强，可以手动unlock/lock，可以转移所有权，可以和条件变量（如cv.wait(lock, ...)）配合使用。
+适用场景：需要和条件变量一起用，或者需要灵活控制锁的地方。
+总结：
+
+用于条件变量等待时，必须用 std::unique_lock。
+只做简单加锁解锁时，用 std::lock_guard 更高效。
