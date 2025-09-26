@@ -39,6 +39,10 @@ private:
             std::function<void()> task;
             {
                 std::unique_lock<std::mutex> lock(queueMutex);
+                /***当 stopFlag 为 true 时，线程池准备关闭，这时所有等待的线程都会被唤醒。
+唤醒后，线程会判断：如果 stopFlag 为 true 或者任务队列为空，就直接 return，线程结束。
+如果还有任务没处理完（即 tasks 非空），线程会继续把任务处理完再退出。
+                    ***/
                 cv.wait(lock, [this]() { return stopFlag || !tasks.empty(); });
                 if (stopFlag && tasks.empty()) return;
                 task = std::move(tasks.front());
