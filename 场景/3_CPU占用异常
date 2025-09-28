@@ -1,6 +1,10 @@
 1、top查看占用CPU过高的进程号<PID>
 2、ps -Lp 21459 -o pid,tid,pcpu,comm  命令可以显示该进程的进程，线程分别占用的cpu，以及运行命令
-3、sudo strace -p <PID> 该命令
+3、sudo strace -p <PID>  / sudo strace -fp <主进程PID> -f 参数表示跟踪由该进程创建的所有子线程和子进程。
+{单独跟踪某个线程
+用 ps -L -p <主进程PID> 查看所有线程的 TID。
+用 strace -p <TID> 跟踪某个具体线程。}
+
 4、sudo gdb -p <PID>  使用gdb调试命令查看具体线程
 
 -p 是 strace 和 gdb 命令的参数，意思是**“附加到指定进程”**，后面要跟进程的 PID（进程号）。
