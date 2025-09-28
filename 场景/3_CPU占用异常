@@ -1,0 +1,102 @@
+1、top查看占用CPU过高的进程号<PID>
+2、ps -Lp 21459 -o pid,tid,pcpu,comm  命令可以显示该进程的进程，线程分别占用的cpu，以及运行命令
+3、sudo strace -p <PID> 该命令
+4、sudo gdb -p <PID>  使用gdb调试命令查看具体线程
+
+-p 是 strace 和 gdb 命令的参数，意思是**“附加到指定进程”**，后面要跟进程的 PID（进程号）。
+
+strace -p <PID>
+表示让 strace 附加到 PID 为 <PID> 的进程，实时观察它的系统调用。
+
+gdb -p <PID>
+表示让 gdb 附加到 PID 为 <PID> 的进程，进行调试（如查看线程、调用栈等）。
+
+
+
+一段实际查找过程：
+huangguang@ubuntu:<del>$ ps -Lp 21459 -o pid,tid,pcpu,comm
+PID TID %CPU COMMAND
+21459 21459 0.4 high_cpu
+21459 21460 100 high_cpu
+21459 21461 100 high_cpu
+21459 21462 100 high_cpu
+21459 21463 100 high_cpu
+huangguang@ubuntu:</del>$ sudo strace -p 21459
+strace: Process 21459 attached
+restart_syscall(<... resuming interrupted read ...>^Cstrace: Process 21459 detached
+<detached ...>
+
+huangguang@ubuntu:<del>$ sudo gdb -p 21459
+GNU gdb (Ubuntu 12.1-0ubuntu1</del>22.04) 12.1
+Copyright (C) 2022 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later http://gnu.org/licenses/gpl.html
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+https://www.gnu.org/software/gdb/bugs/.
+Find the GDB manual and other documentation resources online at:
+http://www.gnu.org/software/gdb/documentation/.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+Attaching to process 21459
+[New LWP 21460]
+[New LWP 21461]
+[New LWP 21462]
+[New LWP 21463]
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+0x00007fe84c2ecadf in __GI___clock_nanosleep (clock_id=clock_id@entry=0, flags=flags@entry=0, req=0x7fff7fe60480, rem=0x7fff7fe60480) at ../sysdeps/unix/sysv/linux/clock_nanosleep.c:78
+78 ../sysdeps/unix/sysv/linux/clock_nanosleep.c: 没有那个文件或目录.
+(gdb) info threads
+Id Target Id Frame
+
+1 Thread 0x7fe84c8a7740 (LWP 21459) "high_cpu" 0x00007fe84c2ecadf in __GI___clock_nanosleep (
+clock_id=clock_id@entry=0, flags=flags@entry=0, req=0x7fff7fe60480, rem=0x7fff7fe60480)
+at ../sysdeps/unix/sysv/linux/clock_nanosleep.c:78
+2 Thread 0x7fe84c1ff6c0 (LWP 21460) "high_cpu" 0x00007fe84c592920 in do_sincos (n=1, da=-2.5480218352497425e-18,
+a=0.33820890824705413) at ../sysdeps/ieee754/dbl-64/s_sin.c:116
+3 Thread 0x7fe84b9fe6c0 (LWP 21461) "high_cpu" __branred (x=<optimized out>, a=a@entry=0x7fe84b9fcaa8,
+aa=aa@entry=0x7fe84b9fcab0) at ../sysdeps/ieee754/dbl-64/branred.c:80
+4 Thread 0x7fe84b1fd6c0 (LWP 21462) "high_cpu" 0x00007fe84c588610 in __branred (x=<optimized out>,
+a=a@entry=0x7fe84b1fbaa8, aa=aa@entry=0x7fe84b1fbab0) at ../sysdeps/ieee754/dbl-64/branred.c:137
+5 Thread 0x7fe84a9fc6c0 (LWP 21463) "high_cpu" 0x000055ed1ad50b52 in std::mersenne_twister_engine<unsigned long, 32ul, 624ul, 397ul, 31ul, 2567483615ul, 11ul, 4294967295ul, 7ul, 2636928640ul, 15ul, 4022730752ul, 18ul, 1812433253ul>::_M_gen_rand() ()
+(gdb) thread 2
+[Switching to thread 2 (Thread 0x7fe84c1ff6c0 (LWP 21460))]
+#0 0x00007fe84c592920 in do_sincos (n=1, da=-2.5480218352497425e-18, a=0.33820890824705413)
+at ../sysdeps/ieee754/dbl-64/s_sin.c:116
+116 ../sysdeps/ieee754/dbl-64/s_sin.c: 没有那个文件或目录.
+(gdb) bt
+#0 0x00007fe84c592920 in do_sincos (n=1, da=-2.5480218352497425e-18, a=0.33820890824705413)
+at ../sysdeps/ieee754/dbl-64/s_sin.c:116
+#1 __sin_fma (x=<optimized out>) at ../sysdeps/ieee754/dbl-64/s_sin.c:243
+#2 0x000055ed1ad5085e in busy_work(int) ()
+#3 0x00007fe84c6ecdb4 in ?? () from /lib/x86_64-linux-gnu/libstdc++.so.6
+#4 0x00007fe84c29caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#5 0x00007fe84c329c3c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+(gdb)
+
+
+解释：
+#0 0x00007fe84c592920 in do_sincos (n=1, da=-2.5480218352497425e-18, a=0.33820890824705413)
+at ../sysdeps/ieee754/dbl-64/s_sin.c:116
+当前线程正停在 do_sincos 函数内部，这是一个用于计算三角函数（如 sin/cos）的底层实现，属于 glibc 的数学库。
+具体在 s_sin.c 文件的第 116 行。
+#1 __sin_fma (x=<optimized out>) at ../sysdeps/ieee754/dbl-64/s_sin.c:243
+这是 do_sincos 的上层调用者，__sin_fma 是 sin 函数的一个实现（带 FMA 优化）。
+也在 s_sin.c 文件中，第 243 行。
+#2 0x000055ed1ad5085e in busy_work(int) ()
+你的 busy_work(int) 函数调用了 std::sin，所以调用栈进入了数学库。
+这里显示的是你的用户代码，说明线程正在 busy_work 的循环里做大量三角函数计算。
+#3 0x00007fe84c6ecdb4 in ?? () from /lib/x86_64-linux-gnu/libstdc++.so.6
+这是 C++ 标准库线程启动相关的内部函数，具体符号未解析（??）。
+负责调用你的线程函数。
+#4 0x00007fe84c29caa4 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+这是 pthread 库的 start_thread，用于启动新线程。
+线程创建的入口。
+#5 0x00007fe84c329c3c in clone3 () at ../sysdeps/unix/sysv/linux/x86_64/clone3.S:78
+这是 Linux 系统调用 clone3，用于创建线程或进程。
+是所有线程的最底层入口。
