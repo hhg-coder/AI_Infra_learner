@@ -1,4 +1,4 @@
-
+# 管道适合父子进程间的简单数据流通信，数据单向流动，速度较慢。
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
