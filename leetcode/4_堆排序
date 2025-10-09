@@ -1,0 +1,6 @@
+priority_queue<int, vector<int>, less<int>> 
+less<int> 表示优先级比较时，较大的元素优先（堆顶是最大值）。
+greater<int>是小顶堆；
+
+295. 数据流的中位数
+设计类时可以拥有大顶堆和小顶堆两个数据结构
