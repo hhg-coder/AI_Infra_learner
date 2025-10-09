@@ -1,0 +1,85 @@
+观察者模式（Observer）
+在观察者模式中，有两个主要角色：
+​​Subject (主题)​​：维护一个观察者列表，提供添加（Attach）、移除（Detach）观察者的方法，以及一个通知所有观察者的方法（Notify）。
+​​Observer (观察者)​​：定义一个更新接口（通常叫 Update），供 Subject 在状态改变时调用。
+这是一种​​直接​​的通信方式。Subject 知道它的观察者列表，并直接调用它们的 Update方法。
+
+伪代码：
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <string>
+#include <algorithm>
+
+// 观察者接口
+class Observer {
+public:
+    virtual ~Observer() = default;
+    virtual void Update(const std::string& state) = 0;
+};
+
+// 主题类
+class Subject {
+public:
+    void Attach(std::shared_ptr<Observer> observer) {
+        observers_.push_back(observer);
+    }
+
+    void Detach(std::shared_ptr<Observer> observer) {
+        observers_.erase(
+            std::remove(observers_.begin(), observers_.end(), observer),
+            observers_.end()
+        );
+    }
+
+    void SetState(const std::string& state) {
+        state_ = state;
+        Notify();
+    }
+
+    std::string GetState() const {
+        return state_;
+    }
+
+private:
+    void Notify() {
+        for (auto& obs : observers_) {
+            obs->Update(state_);
+        }
+    }
+
+    std::vector<std::shared_ptr<Observer>> observers_;
+    std::string state_;
+};
+
+// 具体观察者
+class ConcreteObserver : public Observer {
+public:
+    ConcreteObserver(const std::string& name) : name_(name) {}
+
+    void Update(const std::string& state) override {
+        std::cout << name_ << " 收到新状态: " << state << std::endl;
+    }
+
+private:
+    std::string name_;
+};
+
+// 示例
+int main() {
+    auto subject = std::make_shared<Subject>();
+
+    auto observerA = std::make_shared<ConcreteObserver>("观察者A");
+    auto observerB = std::make_shared<ConcreteObserver>("观察者B");
+
+    subject->Attach(observerA);
+    subject->Attach(observerB);
+
+    subject->SetState("状态1");
+    subject->SetState("状态2");
+
+    subject->Detach(observerA);
+    subject->SetState("状态3");
+
+    return 0;
+}
