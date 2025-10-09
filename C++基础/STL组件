@@ -1,0 +1,50 @@
+STL六大组件：
+容器
+算法
+迭代器
+函数对象：
+适配器Adapters
+分配器Allocators
+
+
+详细：
+函数对象：
+https://blog.csdn.net/qq_52324409/article/details/121552042
+    重载操作符()的类，其对象常称为函数对象
+    函数对象使用重载的()时，行为类似函数调用，因此也叫仿函数
+    本质：函数对象(仿函数)是一个类，而不是一个函数
+#include<iostream>
+using namespace std;
+class myPrint
+{
+public:
+	int count;//函数对象的状态，用来记录函数使用的次数
+	myPrint() :count(0) {}
+	void operator()(string str) //重载()操作符
+	{
+		cout << str;
+		++count;
+	}
+};
+void doPrint(myPrint& mp, string str)//函数对象作为参数传递
+{
+	mp(str);
+}
+int main()
+{
+	myPrint Print;
+	Print("hello 函数对象\n");
+	Print("hello 函数对象\n");
+	doPrint(Print, "hello 仿函数");
+	cout << "函数对象调用的次数：" << Print.count << endl;
+}
+
+函数对象中的谓词：
+谓词概念：
+返回值是bool类型的函数或函数对象称为谓词
+如果operator()接收一个参数，就叫一元谓词
+如果operator()接收两个参数，就叫二元谓词
+
+在C++ STL的内置算法中有很多函数都是有谓词这个参数的，比如大家常用的sort()排序算法，它的参数列表如下：
+void sort<_Ranlt>(const_Ranlt_First, const_Ranlt_Last, _Pr_Pred);
+它的第三个参数_Pr_Pred就是谓词，这个参数可以不用传，默认升序排序，但如果你想要降序排序，这个谓词参数就必须要传了。
