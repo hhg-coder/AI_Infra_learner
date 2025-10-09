@@ -1,0 +1,81 @@
+发布-订阅模式是观察者模式的一种变体，它通过引入一个​​中间件（事件通道/消息代理）​​ 来解耦发布者和订阅者。
+Publisher (发布者)​​：将消息发布到特定频道（Channel/Topic），它不知道也不关心谁会接收。
+​​Subscriber (订阅者)​​：向中间件订阅感兴趣的频道，并提供一个回调函数。它不知道消息来自哪个发布者。
+​​Event Channel / Message Broker (事件通道/消息代理)​​：负责接收发布者的消息，并根据频道将其路由给所有订阅了该频道的订阅者。
+这是一种​​间接​​的通信方式，耦合度更低，扩展性更强。
+
+伪代码：
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
+#include <algorithm>
+
+// 订阅者接口
+class Subscriber {
+public:
+    virtual ~Subscriber() = default;
+    virtual void OnMessage(const std::string& topic, const std::string& message) = 0;
+};
+
+// 消息中心（事件总线）
+class MessageBus {
+public:
+    // 订阅主题
+    void Subscribe(const std::string& topic, std::shared_ptr<Subscriber> sub) {
+        subscribers_[topic].push_back(sub);
+    }
+
+    // 取消订阅
+    void Unsubscribe(const std::string& topic, std::shared_ptr<Subscriber> sub) {
+        auto& subs = subscribers_[topic];
+        subs.erase(std::remove(subs.begin(), subs.end(), sub), subs.end());
+    }
+
+    // 发布消息
+    void Publish(const std::string& topic, const std::string& message) {
+        auto it = subscribers_.find(topic);
+        if (it != subscribers_.end()) {
+            for (auto& sub : it->second) {
+                sub->OnMessage(topic, message);
+            }
+        }
+    }
+
+private:
+    std::map<std::string, std::vector<std::shared_ptr<Subscriber>>> subscribers_;
+};
+
+// 具体订阅者
+class ConcreteSubscriber : public Subscriber {
+public:
+    ConcreteSubscriber(const std::string& name) : name_(name) {}
+
+    void OnMessage(const std::string& topic, const std::string& message) override {
+        std::cout << name_ << " 收到主题 [" << topic << "] 的消息: " << message << std::endl;
+    }
+
+private:
+    std::string name_;
+};
+
+// 示例
+int main() {
+    MessageBus bus;
+
+    auto subA = std::make_shared<ConcreteSubscriber>("订阅者A");
+    auto subB = std::make_shared<ConcreteSubscriber>("订阅者B");
+
+    bus.Subscribe("新闻", subA);
+    bus.Subscribe("体育", subA);
+    bus.Subscribe("新闻", subB);
+
+    bus.Publish("新闻", "今天有大新闻！");
+    bus.Publish("体育", "足球比赛开始了！");
+
+    bus.Unsubscribe("新闻", subB);
+    bus.Publish("新闻", "新闻更新：天气晴朗。");
+
+    return 0;
+}
