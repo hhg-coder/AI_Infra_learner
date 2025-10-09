@@ -1,0 +1,135 @@
+https://zhuanlan.zhihu.com/p/1947780856430174714
+
+三、智能指针的应用实战
+3.1案例一：工厂模式中的资源管理
+在软件开发中，工厂模式就像是一个神奇的工厂，能根据不同的需求生产出各种产品。而在 C++ 中，std::unique_ptr在工厂模式里扮演着重要的资源管理角色。
+
+假设我们正在开发一个游戏，游戏中有各种不同类型的角色，比如战士、法师、刺客等。我们可以使用工厂模式来创建这些角色，并且使用std::unique_ptr来管理它们的生命周期 。
+#include <iostream>
+#include <memory>
+
+// 定义角色基类
+class Character {
+public:
+    virtual void display() const = 0;
+    virtual ~Character() = default;
+};
+
+// 战士类，继承自Character
+class Warrior : public Character {
+public:
+    void display() const override {
+        std::cout << "我是一名战士" << std::endl;
+    }
+};
+
+// 法师类，继承自Character
+class Mage : public Character {
+public:
+    void display() const override {
+        std::cout << "我是一名法师" << std::endl;
+    }
+};
+
+// 刺客类，继承自Character
+class Assassin : public Character {
+public:
+    void display() const override {
+        std::cout << "我是一名刺客" << std::endl;
+    }
+};
+
+// 角色工厂类
+class CharacterFactory {
+public:
+    static std::unique_ptr<Character> createCharacter(const std::string& type) {
+        if (type == "warrior") {
+            return std::make_unique<Warrior>();
+        } else if (type == "mage") {
+            return std::make_unique<Mage>();
+        } else if (type == "assassin") {
+            return std::make_unique<Assassin>();
+        }
+        return nullptr;
+    }
+};
+
+int main() {
+    // 使用工厂创建战士角色
+    std::unique_ptr<Character> warrior = CharacterFactory::createCharacter("warrior");
+    if (warrior) {
+        warrior->display();
+    }
+
+    // 使用工厂创建法师角色
+    std::unique_ptr<Character> mage = CharacterFactory::createCharacter("mage");
+    if (mage) {
+        mage->display();
+    }
+
+    // warrior和mage离开作用域，所指向的角色对象会被自动销毁
+    return 0;
+}
+
+3.2案例二：图形界面编程中的数据共享
+在图形界面编程的世界里，经常会遇到多个窗口需要共享数据的情况。比如，在一个绘图软件中，有一个主窗口显示绘制的图形，还有一个属性窗口显示图形的相关属性，这两个窗口都需要访问和修改图形的数据。这时，std::shared_ptr就派上用场了，它能很好地实现数据的共享，同时保证内存安全 。
+#include <iostream>
+#include <memory>
+#include <string>
+
+// 定义图形数据类
+class GraphicData {
+public:
+    std::string name;
+    int width;
+    int height;
+
+    GraphicData(const std::string& n, int w, int h) : name(n), width(w), height(h) {}
+};
+
+// 主窗口类
+class MainWindow {
+public:
+    std::shared_ptr<GraphicData> data;
+
+    MainWindow(const std::shared_ptr<GraphicData>& d) : data(d) {}
+
+    void display() {
+        std::cout << "主窗口显示图形: " << data->name << ", 宽: " << data->width << ", 高: " << data->height << std::endl;
+    }
+};
+
+// 属性窗口类
+class PropertyWindow {
+public:
+    std::shared_ptr<GraphicData> data;
+
+    PropertyWindow(const std::shared_ptr<GraphicData>& d) : data(d) {}
+
+    void update(int w, int h) {
+        data->width = w;
+        data->height = h;
+        std::cout << "属性窗口更新图形属性, 宽: " << data->width << ", 高: " << data->height << std::endl;
+    }
+};
+
+int main() {
+    // 创建图形数据
+    std::shared_ptr<GraphicData> graphicData = std::make_shared<GraphicData>("矩形", 100, 200);
+
+    // 创建主窗口和属性窗口，并共享图形数据
+    MainWindow mainWindow(graphicData);
+    PropertyWindow propertyWindow(graphicData);
+
+    // 主窗口显示图形
+    mainWindow.display();
+
+    // 属性窗口更新图形属性
+    propertyWindow.update(150, 250);
+
+    // 主窗口再次显示图形，查看更新后的结果
+    mainWindow.display();
+
+    // graphicData的引用计数降为0，图形数据对象被自动销毁
+    return 0;
+}
