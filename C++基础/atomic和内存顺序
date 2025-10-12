@@ -1,0 +1,57 @@
+在 C++ 的原子操作中，**内存顺序（memory order）**是指多线程环境下，编译器和 CPU 如何保证对内存的访问顺序。它影响原子操作之间以及与普通操作之间的可见性和重排序。
+
+常见的内存顺序有：
+
+std::memory_order_relaxed：最弱，不保证顺序，只保证原子性。
+std::memory_order_acquire：保证本线程后续的读写不会被重排到原子操作之前。
+std::memory_order_release：保证本线程之前的读写不会被重排到原子操作之后。
+std::memory_order_acq_rel：同时具备 acquire 和 release 的语义。
+std::memory_order_seq_cst：最强，保证全局顺序一致（默认）。
+
+例子：
+#include <atomic>
+#include <thread>
+#include <iostream>
+
+std::atomic<bool> ready{false};
+int data = 0;
+
+// 线程A：写数据
+void writer() {
+    data = 42; // 普通写
+    ready.store(true, std::memory_order_release); // 通知已准备好
+}
+
+// 线程B：读数据
+void reader() {
+    while (!ready.load(std::memory_order_acquire)) {
+        // 等待数据准备好
+    }
+    std::cout << "data = " << data << std::endl; // 一定能看到 data = 42
+}
+
+int main() {
+    std::thread t1(writer);
+    std::thread t2(reader);
+    t1.join();
+    t2.join();
+    return 0;
+}
+
+
+虽然代码里 data = 42; 写在 ready.store(true, ...) 前面，但编译器和 CPU 为了优化性能，可能会把指令顺序调整（重排序），尤其是在多线程环境下。
+
+为什么会乱套？
+编译器优化：编译器可能觉得 data = 42; 和 ready.store(true, ...) 没有直接依赖关系，于是把它们的顺序调整，提高执行效率。
+CPU 重排序：现代 CPU 也会对指令进行重排序，让处理器更高效。
+
+结果是什么？
+如果没有内存顺序的约束，ready 可能先被设置为 true，而 data 还没来得及赋值为 42。这样，另一个线程看到 ready == true，但 data 还是旧值。
+
+内存顺序的作用
+memory_order_release：告诉编译器和 CPU，“在这之前的写操作（比如 data = 42）必须先完成，不能乱！”
+memory_order_acquire：保证“在这之后的读操作（比如读 data）不会被提前到前面去”。
+
+总结
+多线程下，单靠代码顺序不够，还要用内存顺序来约束编译器和 CPU，确保数据同步和可见性。
+否则，优化可能让你看到“门铃响了，但快递还没放进去”的奇怪现象。
