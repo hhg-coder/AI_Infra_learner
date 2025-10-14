@@ -24,3 +24,121 @@ ninja
 ​​自动处理依赖关系​​：CMake 可以很方便地查找系统上的库和头文件，并自动配置编译和链接选项。
 
 请始终记得使用 build目录进行“源外构建”。​
+
+
+基础CMake命令：
+一、基础配置：
+
+# 指定 CMake 的最低版本要求
+cmake_minimum_required(VERSION 3.10)
+
+# 定义项目名称、版本、使用的语言（C 和 C++）
+project(MyProject VERSION 1.0.0 DESCRIPTION "A simple project" LANGUAGES C CXX)
+
+# 设置 C++ 标准 (非常重要！)
+set(CMAKE_CXX_STANDARD 11) # 或 14, 17, 20, 23
+set(CMAKE_CXX_STANDARD_REQUIRED ON) # 强制要求支持该标准
+set(CMAKE_CXX_EXTENSIONS OFF) # 禁用编译器特定扩展，保证跨平台兼容性
+
+# 创建可执行文件目标
+# 语法：add_executable(目标名 源文件1.cpp 源文件2.cpp ...)
+add_executable(MyApp main.cpp helper.cpp)
+
+# 创建库目标
+# 语法：add_library(目标名 [STATIC|SHARED|MODULE] 源文件1.cpp ...)
+add_library(MyLibrary STATIC my_lib.cpp) # 创建静态库 (.a / .lib)
+# add_library(MyLibrary SHARED my_lib.cpp) # 创建动态库/共享库 (.so / .dll)
+
+
+二、包含头文件目录
+告诉编译器去哪里找头文件。
+
+# 为指定目标添加私有头文件搜索路径
+# 语法：target_include_directories(目标名 PRIVATE [路径1] [路径2] ...)
+target_include_directories(MyApp PRIVATE include)
+target_include_directories(MyLibrary PUBLIC include) # PUBLIC 属性会传递给链接该库的目标
+
+# 添加全局头文件搜索路径（对所有目标生效，谨慎使用）
+# include_directories(include)
+
+
+三、链接库文件
+# 为指定目标链接所需的库
+# 语法：target_link_libraries(目标名 PRIVATE [库1] [库2] ...)
+target_link_libraries(MyApp PRIVATE MyLibrary) # 链接自己创建的库
+
+# 链接系统或第三方库 (例如 pthread, math)
+target_link_libraries(MyApp PRIVATE pthread m) # Linux 下链接 pthread 和 math 库
+
+# 如果库文件不在默认路径，需要先使用 link_directories 指定库搜索路径
+# link_directories(/path/to/your/libs)
+
+
+四、变量与常用选项
+# 1. 设置变量
+set(MY_SOURCES src/main.cpp src/helper.cpp) # 定义变量 MY_SOURCES
+set(MY_INCLUDES include) # 定义变量 MY_INCLUDES
+
+# 使用变量
+add_executable(MyApp ${MY_SOURCES})
+target_include_directories(MyApp PRIVATE ${MY_INCLUDES})
+
+# 2. 打印消息 (用于调试或提示)
+message(STATUS "This is a status message: MY_SOURCES = ${MY_SOURCES}")
+
+# 3. 条件判断
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Building in Debug mode")
+    # 添加调试编译选项，例如生成调试符号
+    add_compile_options(-g)
+else()
+    message(STATUS "Building in Release mode")
+endif()
+
+# 4. 设置构建类型 (默认为 Debug，如果未指定)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+
+五、查找第三方库
+这是查找已安装库（如 OpenCV、Boost）的常用方法。
+# 使用 find_package 查找 OpenCV (必需)
+find_package(OpenCV REQUIRED)
+
+# 如果找到，会包含 OpenCV_INCLUDE_DIRS 和 OpenCV_LIBS 等变量
+if(OpenCV_FOUND)
+    message(STATUS "OpenCV library status:")
+    message(STATUS "    version: ${OpenCV_VERSION}")
+    message(STATUS "    libraries: ${OpenCV_LIBS}")
+    message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+
+    # 将找到的头文件路径和库链接到你的目标
+    target_include_directories(MyApp PRIVATE ${OpenCV_INCLUDE_DIRS})
+    target_link_libraries(MyApp PRIVATE ${OpenCV_LIBS})
+endif()
+
+# 其他常用库
+# find_package(Boost REQUIRED COMPONENTS system filesystem)
+# find_package(Threads REQUIRED) # 用于跨平台的线程库查找
+
+
+六、安装规则 (Make Install)
+定义 make install或 ninja install时的行为，用于发布你的程序或库。
+# 安装可执行文件到 ${CMAKE_INSTALL_PREFIX}/bin
+install(TARGETS MyApp
+        RUNTIME DESTINATION bin) # Windows 下为 .exe，Linux 下为无后缀文件
+
+# 安装静态库到 lib
+install(TARGETS MyLibrary
+        ARCHIVE DESTINATION lib) # 静态库 .a / .lib
+
+# 安装动态库到 lib
+# install(TARGETS MySharedLibrary
+#         LIBRARY DESTINATION lib) # 动态库 .so / .dll
+#         RUNTIME DESTINATION bin) # 在 Windows 上，DLL 被归类为 RUNTIME，需要安装到 bin
+
+# 安装头文件到 include
+install(DIRECTORY include/ # 注意这里的斜杠，表示包含目录内容
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h")
