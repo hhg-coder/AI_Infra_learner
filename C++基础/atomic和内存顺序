@@ -55,3 +55,93 @@ memory_order_acquire：保证“在这之后的读操作（比如读 data）不�
 总结
 多线程下，单靠代码顺序不够，还要用内存顺序来约束编译器和 CPU，确保数据同步和可见性。
 否则，优化可能让你看到“门铃响了，但快递还没放进去”的奇怪现象。
+
+
+atomic用法和方法：
+load、store、exchange、compare_exchange_weak和compare_exchange_strong
+fetch_add/ fetch_sub
+fetch_and/ fetch_or/ fetch_xor
+
+1. 核心操作
+1.1 load- 原子地读取值
+从原子对象中读取当前值。
+​​语法​​： T load( std::memory_order order = std::memory_order_seq_cst ) const noexcept;
+​​参数​​：
+order： 内存顺序，默认是最严格的顺序一致性 (std::memory_order_seq_cst)。
+​​返回​​： 原子对象当前的值。
+#include <atomic>
+#include <iostream>
+int main() {
+    std::atomic<int> count(10);
+    int current_value = count.load(); // 原子地读取
+    std::cout << "Current count: " << current_value << std::endl;
+    return 0;
+}
+
+1.2 store- 原子地写入值
+将值写入原子对象。
+​​语法​​： void store( T desired, std::memory_order order = std::memory_order_seq_cst ) noexcept;
+​​参数​​：
+desired： 要写入的值。
+order： 内存顺序。
+std::atomic<bool> ready(false);
+
+void worker() {
+    // ... 做一些准备工作
+    ready.store(true); // 原子地写入，通知其他线程准备就绪
+}
+
+int main() {
+    std::thread t(worker);
+    while (!ready.load()) { // 等待工作线程准备就绪
+        // 忙等待或休眠
+    }
+    t.join();
+    return 0;
+}
+
+2. 读-修改-写 (RMW) 操作
+这些操作自动完成“读取、修改、写回”三个步骤，整个过程中不会被其他线程打断。
+2.1 exchange- 原子交换
+将原子对象的值替换为指定的新值，并返回它​​之前​​持有的值。
+​​语法​​： T exchange( T desired, std::memory_order order = std::memory_order_seq_cst ) noexcept;
+​​应用场景​​： 简单的取旧值设新值操作。
+std::atomic<int> value(5);
+int old_value = value.exchange(10); // value变成10，old_value为5
+
+2.2 compare_exchange_weak和 compare_exchange_strong- 比较并交换 (CAS)
+原子操作的基石，用于实现无锁数据结构。
+​​功能​​： 比较原子对象的当前值是否与期望值 expected相等。
+如果相等，则将原子对象的值替换为 desired，返回 true。
+如果不相等，则将原子对象的当前值写入 expected，返回 false。
+std::atomic<int> counter(0);
+
+void increment() {
+    int old_val = counter.load();
+    // 如果counter的值还是old_val，就把它设置为old_val + 1
+    // 如果不相等（说明被其他线程改动了），则old_val会被更新为counter的最新值，循环重试
+    while (!counter.compare_exchange_weak(old_val, old_val + 1)) {
+        // 循环体通常为空，CAS失败后会自动更新old_val并重试
+    }
+}
+// 多个线程同时调用increment()也能安全地让counter加1
+
+2.3 fetch_add/ fetch_sub- 原子加减
+原子地将值加到原子对象上（或从原子对象减去），并返回操作​​之前​​的值。
+​​语法​​： T fetch_add( T arg, std::memory_order order = std::memory_order_seq_cst ) noexcept;
+​​应用场景​​： 计数器。
+2.4 fetch_and/ fetch_or/ fetch_xor- 原子位运算
+原子地执行位与、位或、位异或操作，并返回操作​​之前​​的值。
+​​语法​​： T fetch_and( T arg, std::memory_order order = std::memory_order_seq_cst ) noexcept;
+
+其他有用方法和特性
+3.1 运算符重载
+为了方便，std::atomic重载了常用的运算符，但它们的行为是原子的。
+operator=()： 原子存储。a = value;
+operator T()： 原子加载。T value = a;
+operator++()/ operator++(int)/ operator--()： 原子自增/自减。a++; ++a;
+operator+=()/ operator-=()： 原子加/减。a += 5;
+3.2 is_lock_free
+检查对该原子类型的操作是否是无锁的（由CPU指令直接实现），而不是使用互斥锁模拟的。
+​​语法​​： bool is_lock_free() const noexcept;
+​​静态版本​​： static constexpr bool is_always_lock_free;
