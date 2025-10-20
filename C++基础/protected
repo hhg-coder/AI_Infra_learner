@@ -1,0 +1,215 @@
+/*
+C++ protected 访问修饰符详解
+
+1. 基本概念
+protected 是 C++ 中类成员的访问修饰符，介于 public 和 private 之间：
+- 对类外部：protected 成员相当于 private（不可访问）
+- 对派生类：protected 成员相当于 public（可访问）
+
+2. 访问规则表
+| 访问位置       | public | protected | private |
+|----------------|--------|-----------|---------|
+| 类内部         | ✅      | ✅        | ✅      |
+| 派生类内部     | ✅      | ✅        | ❌      |
+| 类外部         | ✅      | ❌        | ❌      |
+| 友元函数/类    | ✅      | ✅        | ✅      |
+
+3. 核心特性
+*/
+class Base {
+protected:
+    int protectedVar;  // protected成员变量
+
+    void protectedMethod() {  // protected成员函数
+        // 可在基类和派生类中访问
+    }
+};
+
+class Derived : public Base {
+public:
+    void accessBase() {
+        protectedVar = 42;        // ✅ 派生类可访问基类protected成员
+        protectedMethod();        // ✅ 派生类可调用基类protected方法
+    }
+};
+
+int main() {
+    Base b;
+    // b.protectedVar = 10;       // ❌ 错误：类外部不可访问protected成员
+    
+    Derived d;
+    // d.protectedMethod();       // ❌ 错误：通过派生类对象外部不可访问
+}
+
+/*
+4. 继承类型对protected的影响
+*/
+// 公有继承（public）
+class PublicDerived : public Base {
+    // Base的public保持public
+    // Base的protected保持protected
+};
+
+// 保护继承（protected）
+class ProtectedDerived : protected Base {
+    // Base的public变为protected
+    // Base的protected保持protected
+};
+
+// 私有继承（private）
+class PrivateDerived : private Base {
+    // Base的public变为private
+    // Base的protected变为private
+};
+
+/*
+5. 典型应用场景
+*/
+
+// 场景1：模板方法模式
+class Algorithm {
+protected:
+    virtual void step1() = 0;  // 派生类必须实现的步骤
+    virtual void step2() = 0;
+    
+public:
+    void execute() {  // 公开模板方法
+        step1();
+        step2();
+    }
+};
+
+class ConcreteAlgo : public Algorithm {
+protected:
+    void step1() override { /* 实现细节 */ }
+    void step2() override { /* 实现细节 */ }
+};
+
+// 场景2：受保护的构造/析构
+class Singleton {
+protected:
+    Singleton() = default;       // 防止外部实例化
+    ~Singleton() = default;
+    
+public:
+    static Singleton& instance() {
+        static Singleton inst;
+        return inst;
+    }
+};
+
+// 场景3：派生类扩展基类功能
+class Shape {
+protected:
+    virtual void drawImpl() = 0;  // 保护实现细节
+    
+public:
+    void draw() { drawImpl(); }   // 公开统一接口
+};
+
+class Circle : public Shape {
+protected:
+    void drawImpl() override { /* 绘制圆形 */ }
+};
+
+/*
+6. 注意事项
+*/
+
+// 注意1：protected成员不是接口的一部分
+class Base2 {
+protected:
+    void helper() {}
+};
+
+class Derived2 : public Base2 {
+public:
+    void useHelper() {
+        helper();  // ✅ 合法：在派生类内部调用
+    }
+};
+
+// Derived2 d;
+// d.helper();  // ❌ 错误：外部不能访问protected成员
+
+// 注意2：protected成员访问权限
+class Base3 {
+protected:
+    int x;
+};
+
+class Derived3 : public Base3 {
+public:
+    void set(Base3& b) {
+        // b.x = 5;  // ❌ 错误：不能访问其他对象的protected成员
+        x = 10;     // ✅ 正确：访问自己的基类成员
+    }
+};
+
+// 注意3：多重继承问题
+class A {
+protected:
+    int value;
+};
+
+class B : public A {};
+class C : public A {};
+
+class D : public B, public C {
+public:
+    void conflict() {
+        // std::cout << value;  // ❌ 错误：二义性（来自B还是C？）
+        std::cout << B::value;  // ✅ 明确指定路径
+    }
+};
+
+/*
+7. 最佳实践
+1) 将需要被派生类重写但不暴露给外部的函数设为protected
+2) 使用protected构造函数实现特殊对象创建逻辑
+3) 在抽象基类中定义protected纯虚函数作为扩展点
+4) 避免在protected区域暴露数据成员（优先使用函数）
+5) 谨慎设计protected接口，保持向后兼容
+
+8. protected vs private
+| 特性               | protected                 | private                 |
+|--------------------|---------------------------|-------------------------|
+| 派生类访问         | ✅ 可访问                 | ❌ 不可访问             |
+| 类外部访问         | ❌ 不可访问               | ❌ 不可访问             |
+| 友元访问           | ✅ 可访问                 | ✅ 可访问               |
+| 设计意图           | 扩展接口                  | 隐藏实现                |
+| 使用频率           | 框架开发常用              | 常规开发常用            |
+
+9. 高级用法：protected继承
+*/
+class Base4 {
+public:
+    void publicMethod() {}
+protected:
+    void protectedMethod() {}
+};
+
+// 保护继承：将基类public降级为protected
+class MiddleLayer : protected Base4 {
+    // publicMethod() 在此变为protected
+    // protectedMethod() 保持protected
+};
+
+class Final : public MiddleLayer {
+public:
+    void use() {
+        publicMethod();    // ✅ 可访问（在MiddleLayer中是protected）
+        protectedMethod(); // ✅ 可访问
+    }
+};
+
+/*
+10. 重要结论
+protected修饰符是C++面向对象设计的关键特性：
+- 提供类层次结构的受控访问
+- 支持"模板方法"等设计模式
+- 实现框架的可扩展性
+- 平衡封装性和灵活性
+
+合理使用protected可以创建既安全又可扩展的类层次结构，特别适用于库和框架开发。
+*/
